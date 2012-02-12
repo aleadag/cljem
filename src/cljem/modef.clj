@@ -137,6 +137,8 @@
              (if-let [k# (:key (meta cmd#))]
                (define-key-for w# k# cmd#)))
            (define-key-for w# "X" #'invoke-mode-cmd)
+           ;; TODO: add a internal frame closed event handler to clean up
+           ;; the meta data
            w#))
        (when (not= ~mode-name "default")
          (defn ~(symbol (str mode-name))
