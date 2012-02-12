@@ -48,15 +48,15 @@
       :normal (do
                 (set-prompt-len minibuffer 0)
                 (reset-cmd!)
-                (if-let [root (to-root minibuffer)]
-                  (hide-completion! root))
                 (config! minibuffer
                          :editable? false
                          :text "Please enter \"ALT-X\" to eval a command"
                          :background "black"
                          :foreground "white")
-                (if (.isFocusOwner minibuffer)
-                  (.transferFocusBackward minibuffer)))
+                (when-let [root (to-root minibuffer)]
+                  (hide-completion! root)
+                  (if (.isFocusOwner minibuffer)
+                    (.transferFocus minibuffer))))
       :insert (do
                 (config! minibuffer
                          :editable? true
