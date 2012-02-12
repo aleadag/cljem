@@ -51,8 +51,9 @@
   [arg-sym & args]
   {:pre [(user-interaction-arg? arg-sym)
          (= 1 (count args))]}
-  (let [text (trim (first args))]
-    (if (string? (:default (meta arg-sym)))
+  (let [text (trim (first args))
+        default (:default (meta arg-sym))]
+    (if (or (nil? default) (string? default))
       text
       (read-string text))))
 
