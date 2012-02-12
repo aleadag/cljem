@@ -7,6 +7,6 @@
    #^{:from :user-input
       :prompt "Please enter an array: "
       :default [1 1]
-      :completion-fn (fn [input] [[1 1] [1 0]])}
+      :completion-fn (fn [input e] (prn e) [[1 1] [1 0]])}
    fx]
   fx)

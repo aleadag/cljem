@@ -1,6 +1,6 @@
 (ns cljem.modef
   (:require [clojure.string :as string])
-  (:use [seesaw core keymap keystroke]
+  (:use [seesaw core keymap keystroke meta font]
         [clojure.tools.logging :only [debug]]
         [cljem cmd minibuffer win-util]))
 
@@ -42,6 +42,12 @@
   (key (some #(== widget (:widget @(val %)))
              @all-mode-metadata)))
 
+(defn ns-for [widget]
+  (get-meta widget :cmd-ns))
+
+(defn set-ns-for [widget ns]
+  (put-meta! widget :cmd-ns ns))
+
 (defn- split-out-init-options [init-options]
   (loop [top-level-options {}
          remaining-options init-options]
@@ -77,6 +83,37 @@
   {:pre [dt w]}
   (.setSelectedFrame dt w))
 
+(defn complete-mode-cmds [hint e]
+  {:pre [(to-widget e)]}
+  (if-let [ns (ns-for (to-widget e))]
+    (filter #(if-let [name (:name (meta %))]
+               (.startsWith (str name) hint))
+            (ns-cmds ns))))
+
+(defn mode-cmd-completion-renderer [renderer info]
+  (let [cmd (:value info)
+        cmd-info (meta cmd)
+        text (format "%-5s%-20s%s"
+                     (or (:key cmd-info) "")
+                     (:name cmd-info)
+                     (str cmd))]
+    (config! renderer
+             :text text
+             :font (font :monospaced))))
+
+(defn invoke-mode-cmd
+  {:interactive true}
+  [#^{:from :event}
+   e
+   #^{:from :user-input
+      :prompt "Command: "
+      :default ""
+      :completion-fn #'cljem.modef/complete-mode-cmds
+      :completion-opts {:renderer cljem.modef/mode-cmd-completion-renderer}}
+   cmd]
+  (reset-cmd!)
+  (handle-user-input #(enter-cmd-info cmd) e))
+
 (defmacro init-mode
   [& init-options]
   (let [mode-name (last (string/split (name (ns-name *ns*)) #"\."))
@@ -93,11 +130,13 @@
        (defn ~'create-widget []
          (let [w# ~widget]
            (set-widget-for ~mode-name w#)
+           (set-ns-for w# ~*ns*)
            (doseq [[k# v#] (map identity ~keymap)]
              (define-key-for w# k# v#))
            (doseq [cmd# (ns-cmds ~*ns*)]
-             (if-let [k# (:keymap (meta cmd#))]
+             (if-let [k# (:key (meta cmd#))]
                (define-key-for w# k# cmd#)))
+           (define-key-for w# "X" #'invoke-mode-cmd)
            w#))
        (when (not= ~mode-name "default")
          (defn ~(symbol (str mode-name))

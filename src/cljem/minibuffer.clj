@@ -158,9 +158,11 @@
       (prepare-args-until-user-interaction! e)
       (if-not (args-ready?)
         (start-next-arg mb e)
-        (do
-          (info mb (str (eval-cmd)))
-          (reset-cmd!)))
+        (let [cmd (get-cmd-entered)
+              ret (eval-cmd)]
+          (when (= cmd (get-cmd-entered))
+            (info mb (str ret))
+            (reset-cmd!))))
       (catch Exception e
         (error mb (.getMessage e))
         (pst e 100)

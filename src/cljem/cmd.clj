@@ -1,5 +1,6 @@
 (ns cljem.cmd
   (:use [clojure.string :only [trim]]
+        [clojure.tools.logging :only [debug]]
         [seesaw.util :only [illegal-argument]]))
 
 ;; :f function
@@ -79,9 +80,15 @@
   ([]
      (cmd-entered? @current-cmd-data)))
 
+(defn arglist-entered
+  ([cmd-data]
+     (:arglist cmd-data))
+  ([]
+     (arglist-entered @current-cmd-data)))
+
 (defn args-ready?
   ([cmd-data]
-     (= (count (:arglist cmd-data))
+     (= (count (arglist-entered cmd-data))
         (count (first (:arglists (meta (:f cmd-data)))))))
   ([]
      (args-ready? @current-cmd-data)))
@@ -95,12 +102,12 @@
 (defn add-cmd-args! [& args]
   (dosync (alter current-cmd-data
                  assoc
-                 :arglist (concat (:arglist @current-cmd-data)
+                 :arglist (concat (arglist-entered)
                                   args))))
 
 (defn get-next-arg-index
   ([cmd-data]
-     (count (:arglist cmd-data)))
+     (count (arglist-entered cmd-data)))
   ([]
      (get-next-arg-index @current-cmd-data)))
 
@@ -161,7 +168,8 @@
 (defn gen-arg-completion [arg-sym hint]
   (let [comp-fn (:completion-fn (meta arg-sym))]
     (if comp-fn
-      (apply (eval comp-fn) [hint])
+      (apply (eval comp-fn)
+             (concat [hint] (arglist-entered)))
       nil)))
 
 (defn gen-completion [hint]
@@ -187,7 +195,10 @@
   ([cmd-data]
      {:pre [(get-cmd-entered cmd-data)
             (args-ready? cmd-data)]}
-     (apply (var-get (:f cmd-data))
-            (:arglist cmd-data)))
+     (debug (format "Evaluating command: %s %s"
+                    (get-cmd-entered cmd-data)
+                    (arglist-entered cmd-data)))
+     (apply (var-get (get-cmd-entered cmd-data))
+            (arglist-entered cmd-data)))
   ([]
      (eval-cmd @current-cmd-data)))
