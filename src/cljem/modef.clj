@@ -99,7 +99,8 @@
                      (str cmd))]
     (config! renderer
              :text text
-             :font (font :monospaced))))
+             :font (font :name "Consolas"
+                         :size 18))))
 
 (defn invoke-mode-cmd
   {:interactive true}
