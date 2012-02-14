@@ -133,7 +133,7 @@
        (defn ~'define-key [key# cmd#]
          {:pre [(widget-for ~mode-name)]}
          (define-key-for (widget-for ~mode-name) key# cmd#))
-       (defn ~'create-widget []
+       (defn ~'create-widget [& args#]
          (let [w# ~widget]
            (set-widget-for ~mode-name w#)
            (set-ns-for w# ~*ns*)
@@ -143,7 +143,8 @@
              (if-let [k# (:key (meta cmd#))]
                (define-key-for w# k# cmd#)))
            (define-key-for w# "X" #'invoke-mode-cmd)
-           (config! w# :title (~'display-name))
+           (if-not (nil? args#)
+             (apply config! w# args#))
            ;; TODO: add a internal frame closed event handler to clean up
            ;; the meta data
            w#))
@@ -154,6 +155,18 @@
            (if (widget-for ~mode-name)
              (active-widget (desktop-pane)
                             (widget-for ~mode-name))
-             (let [w# (~'create-widget)]
+             (let [w# (~'create-widget :title ~display-name)]
                (add-widget (desktop-pane) w#)))
-           (str "Loaded " ~mode-name))))))
+           (str "Loaded " ~mode-name))
+         ;; seesaw.examples like mechanizm to make development/testing easier
+         (defn ~'run [on-close#]
+           (require '~'cljem.main-frame)
+           (let [w# (@(ns-resolve '~'cljem.main-frame '~'make-main-frame))]
+             (invoke-later
+              (config! w#
+                       :on-close on-close#
+                       :title "Testing ...")
+              (when (= (java.awt.Dimension.) (.getSize w#))
+                (pack! w#))
+              (show! w#)))
+           (~(symbol (str mode-name))))))))
