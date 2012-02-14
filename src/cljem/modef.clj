@@ -128,6 +128,11 @@
        ;; Please be note that: ~widget and (widget-for ~mode-name) is different
        ;; Everytime call ~widget, it will create a new widget
        (def ~'mode-name ~mode-name)
+       (defn ~'display-name [] (display-name-for ~mode-name))
+       (defn ~'widget [] (widget-for ~mode-name))
+       (defn ~'define-key [key# cmd#]
+         {:pre [(widget-for ~mode-name)]}
+         (define-key-for (widget-for ~mode-name) key# cmd#))
        (defn ~'create-widget []
          (let [w# ~widget]
            (set-widget-for ~mode-name w#)
@@ -138,6 +143,7 @@
              (if-let [k# (:key (meta cmd#))]
                (define-key-for w# k# cmd#)))
            (define-key-for w# "X" #'invoke-mode-cmd)
+           (config! w# :title (~'display-name))
            ;; TODO: add a internal frame closed event handler to clean up
            ;; the meta data
            w#))
@@ -150,9 +156,4 @@
                             (widget-for ~mode-name))
              (let [w# (~'create-widget)]
                (add-widget (desktop-pane) w#)))
-           (str "Loaded " ~mode-name)))
-       (defn ~'display-name [] (display-name-for ~mode-name))
-       (defn ~'widget [] (widget-for ~mode-name))
-       (defn ~'define-key [key# cmd#]
-         {:pre [(widget-for ~mode-name)]}
-         (define-key-for (widget-for ~mode-name) key# cmd#)))))
+           (str "Loaded " ~mode-name))))))
