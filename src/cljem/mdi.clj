@@ -13,9 +13,8 @@
 (widget-option-provider javax.swing.JDesktopPane desktop-pane-options)
 
 (defn desktop-pane
-  {:seesaw {:class 'javax.swing.JDesktopPane}}
   [& opts]
-  (apply-options (construct javax.swing.JDesktopPane opts) opts))
+  (apply-options (construct javax.swing.JDesktopPane) opts))
 
 (def internal-frame-options
   (merge default-options
@@ -43,6 +42,5 @@
 (widget-option-provider javax.swing.JInternalFrame internal-frame-options)
 
 (defn internal-frame
-  {:seesaw {:class 'javax.swing.JInternalFrame}}
   [& opts]
-  (apply-options (construct javax.swing.JInternalFrame opts) opts))
+  (apply-options (construct javax.swing.JInternalFrame) opts))
