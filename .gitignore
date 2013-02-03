@@ -4,6 +4,7 @@
 /classes
 /native
 /temp
+/target
 /.lein-failures
 /checkouts
 /.lein-deps-sum
